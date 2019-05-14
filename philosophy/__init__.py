@@ -4,7 +4,6 @@ from urllib.request import urlopen
 import bs4
 
 
-
 def get_page_title(soup):
     """
     Get the page title from the top-level html.
@@ -17,23 +16,20 @@ def get_first_link(soup):
     Get the first link from a page.
     """
     paragraphs = soup.find('div', {"class": "mw-parser-output"}).find_all('p')
+
     for p in paragraphs:
-        text = p.contents
-
-        if not text:
+        links = p.find_all('a')
+        if not links:
             continue
-
-        for t in text:
-            if isinstance(t, str):
-                if not t.strip():
-                    continue
-
-            for elem in t.next_elements:
-                link, title = getlink(elem)
-                if link:
-                    return link, title
+        for l in links:
+            if ispagelink(l):
+                return getlink(l)
 
     raise RuntimeError("Couldn't find a hyperlink.")
+
+
+def ispagelink(tag):
+    return True
 
 
 def getlink(tag):
@@ -44,9 +40,9 @@ def getlink(tag):
     """
     if not tag or isinstance(tag, str):
         return None, None
-    if "href" in tag.attrs:
-        return tag["href"], tag["title"]
-    return None, None
+    if "href" not in tag.attrs:
+        return None, None
+    return tag["href"], tag["title"]
 
 
 if __name__ == "__main__":
